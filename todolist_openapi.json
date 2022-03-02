@@ -1,0 +1,320 @@
+{
+    "info": {
+        "description": "This is a sample http server for ToDo lists.",
+        "version": "1.0.0",
+        "title": "ToDo List Server"
+    },
+    "schemes": ["http"],
+    "paths": {
+        "/list/{list_id}": {
+            "get": {
+                "summary": "Liefert alle Einträge einer Liste zurück.",
+                "parameters": [{
+                    "name": "list_id",
+                    "in": "path",
+                    "description": "ID der gewünschten Liste",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Löscht eine komplette Liste mit allen Einträgen.",
+                "parameters": [{
+                    "name": "list_id",
+                    "in": "path",
+                    "description": "ID der gewünschten Liste",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/list/": {
+            "post": {
+                "summary": "Fügt eine neue Liste hinzu.",
+                "parameters": [{
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "new_list": {},
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/list/{list_id}/entry/": {
+            "post": {
+                "summary": "Fügt einen Eintrag zu einer bestehenden Liste hinzu.",
+                "parameters": [{
+                    "name": "list_id",
+                    "in": "path",
+                    "description": "ID der gewünschten Liste",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }, {
+                    "name": "new_entry",
+                    "description": "JSON-Objekt des neuen Eintrags",
+                    "required": true,
+                    "format": "json"
+                } ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/list/{list_id}/entry/{entry_id}": {
+            "post": {
+                "summary": "Aktualisiert einen bestehenden Eintrag.",
+                "parameters": [{
+                    "name": "list_id",
+                    "in": "path",
+                    "description": "ID der gewünschten Liste",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }, {
+                    "name": "entry_id",
+                    "in": "path",
+                    "description": "ID des gewünschten Eintrags",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Löscht einen einzelnen Eintrag einer Liste.",
+                "parameters": [{
+                    "name": "list_id",
+                    "in": "path",
+                    "description": "ID der gewünschten Liste",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }, {
+                    "name": "entry_to_delete",
+                    "description": "JSON-Objekt des zu löschenden Eintrags",
+                    "required": true,
+                    "format": "json"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/": {
+            "get": {
+                "summary": "Liefert eine Liste aller Benutzer zurück.",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Fügt einen neuen Benutzer hinzu.",
+                "parameters": [{
+                    "name": "user_to_add",
+                    "description": "JSON des Nutzers",
+                    "required": true,
+                    "format": "json"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }, 
+                        "data_of_new_user": {
+                            "user_id": ""
+                        }
+                    },
+                    "500": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{user_id}": {
+            "delete": {
+                "summary": "Löscht einen Benutzer.",
+                "parameters": [{
+                    "name": "user_id",
+                    "in": "path",
+                    "description": "ID des gewünschten Nutzers",
+                    "required": true,
+                    "type": "integer",
+                    "format": "int64"
+                }, {
+                    "name": "user_to_delete",
+                    "description": "JSON-Objekt des zu löschenden Nutzers",
+                    "required": true,
+                    "format": "json"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/ApiResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ApiResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "list": {
+            "type": "object",
+            "required": ["list_id"],
+            "properties": {
+                "list_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "user": {
+                    "$ref": "#/definitions/User"
+                },
+                "entries": {
+                    "type": "array"
+                }
+            }
+        },
+        "user": {
+            "type": "object",
+            "required": ["user_id"],
+            "properties": {
+                "user_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "entry": {
+            "type": "object",
+            "required": ["entry_id"],
+            "properties": {
+                "entry_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}
+        
