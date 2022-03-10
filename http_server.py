@@ -12,9 +12,11 @@ app = Flask(__name__)
 user_id_bob = uuid.uuid4()
 user_id_alice = uuid.uuid4()
 user_id_eve = uuid.uuid4()
+
 todo_list_1_id = '1318d3d1-d979-47e1-a225-dab1751dbe75'
 todo_list_2_id = '3062dc25-6b80-4315-bb1d-a7c86b014c65'
 todo_list_3_id = '44b02e00-03bc-451d-8d01-0c67ea866fee'
+
 todo_1_id = uuid.uuid4()
 todo_2_id = uuid.uuid4()
 todo_3_id = uuid.uuid4()
@@ -52,9 +54,10 @@ def handle_list(list_id):
     # find todo list depending on given list id
     list_item = None
     for l in todo_lists:
-        if l['id'] == list_id:
+        if str(l['id']) == str(list_id): #for some reason I have to convert the ids to strings, otherwise the IF-clause does not work with UUIDs
             list_item = l
             break
+
     # if the given list id is invalid, return status code 404
     if not list_item:
         abort(404)
@@ -72,7 +75,7 @@ def handle_list(list_id):
 
 
 # define endpoint for adding a new list
-@app.route('/list', methods=['POST'])
+@app.route('/list/', methods=['POST'])
 def add_new_list():
     # make JSON from POST data (even if content type is not set correctly)
     new_list = request.get_json(force=True)
@@ -86,59 +89,71 @@ def add_new_list():
 # define endpoint for adding a new entry to a list
 @app.route('/list/<list_id>/entry/', methods=['POST'])
 def add_new_entry(list_id):
-    # make JSON from POST data (even if content type is not set correctly)
-    new_entry = request.get_json(force=True)
-    print('Got new entry to be added: {}'.format(new_entry))
-    # create id for new list, save it and return the list with id
-    new_entry['id'] = uuid.uuid4()
-    new_entry['id'].list = list_id
-    todos.append(new_entry)
-    return jsonify(new_entry), 200
+    list_item = None
+    for l in todo_lists:
+        if str(l['id']) == str(list_id):
+            list_item = l
+            break
+
+    # if the given list id is invalid, return status code 404
+    if not list_item:
+        abort(404)
+    else:
+        # make JSON from POST data (even if content type is not set correctly)
+        new_entry = request.get_json(force=True)
+        print('Got new entry to be added: {}'.format(new_entry))
+        # create id for new list, save it and return the list with id
+        new_entry['id'] = uuid.uuid4()
+        new_entry['list'] = list_id
+        todos.append(new_entry)
+        return jsonify(new_entry), 200
 
 
 # define endpoint for updating and deleting an entry of a list
 @app.route('/list/<list_id>/entry/<entry_id>', methods=['POST', 'DELETE'])
 def update_entry(list_id, entry_id):
-    list_item = None
+    #find the list
+    wanted_list = None
     for l in todo_lists:
-        if l['id'] == list_id:
-            list_item = l
+        if str(l['id']) == str(list_id):
+            wanted_list = l
             break
     
-    if not list_item:
+    #find the entry
+    wanted_entry = None
+    for e in todos:
+        if str(e['id']) == str(entry_id):
+            wanted_entry = e
+            break
+    
+    if not wanted_list or not wanted_entry:
         abort(404)
-        
-    # make JSON from POST data (even if content type is not set correctly)
+
+    #updates the entry     
     if request.method == 'POST':
+        # make JSON from POST data (even if content type is not set correctly)
         updated_entry = request.get_json(force=True)
         for x in todos:
-            if todos.list == list_id and todos.id == entry_id:
-                x = updated_entry
+            if str(x['id']) == str(wanted_entry['id']) and str(x['list']) == str(wanted_list['id']):
+                x['name'] = updated_entry['name'] #only the name can be updated
                 return jsonify(updated_entry), 200
     
+    #deletes the entry
     if request.method == 'DELETE':
-        entry_item = None
-        for k in todos:
-            if k['id'] == entry_id:
-                entry_item = k
-                break
-        
-        if not entry_item:
-            abort(404)
-        else:
-            # delete entry with given id from a certain list
-            for x in todos:
-                if todos.list == list_id and todos.id == entry_id:
-                    todos.remove(x)
-                    return '', 200
+        for y in todos:
+            if str(y['id']) == str(wanted_entry['id']) and str(y['list']) == str(wanted_list['id']):
+                todos.remove(y)
+                return '', 200
     
     
-# define endpoint for getting all users
-@app.route('/users', methods=['GET', 'POST'])
+# define endpoint for getting all users and adding new ones
+@app.route('/users/', methods=['GET', 'POST'])
 def handle_users():
+    #return all users
     if request.method == 'GET':
         return jsonify(user_list)
 
+    #add a new user
     if request.method == 'POST':
         new_user = request.get_json(force=True)
         print('Got new user to be added: {}'.format(new_user))
@@ -151,26 +166,25 @@ def handle_users():
 # define endpoint for deleting a user
 @app.route('/users/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    # find user
-    user_exists = False
-
-    for l in user_list:
-        if l['id'] == user_id:
-            user_exists = True
+    # find user depending on given id
+    user_to_delete = None
+    for u in user_list:
+        if str(u['id']) == str(user_id):
+            user_to_delete = u
             break
-    # if the given user does not exist, return status code 404
-    if user_exists == False:
+    
+    if not user_to_delete:
         abort(404)
     else:
-        print('Deleting user...')
-        user_list.remove(user_id)
+        #delete user
+        print("Deleting user... ")
+        user_list.remove(user_to_delete)
         return '', 200
-
 
 # define endpoint for getting all lists
 @app.route('/lists', methods=['GET'])
 def get_all_lists():
-    return jsonify(user_list)
+    return jsonify(todo_lists)
 
 
 if __name__ == '__main__':

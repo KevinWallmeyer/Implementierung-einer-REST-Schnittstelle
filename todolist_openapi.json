@@ -62,6 +62,10 @@
             "post": {
                 "summary": "Fügt eine neue Liste hinzu.",
                 "parameters": [{
+                    "name": "list_to_add",
+                    "description": "JSON of list",
+                    "required": true,
+                    "format": "json"
                 }],
                 "responses": {
                     "200": {
@@ -84,13 +88,6 @@
             "post": {
                 "summary": "Fügt einen Eintrag zu einer bestehenden Liste hinzu.",
                 "parameters": [{
-                    "name": "list_id",
-                    "in": "path",
-                    "description": "ID der gewünschten Liste",
-                    "required": true,
-                    "type": "integer",
-                    "format": "int64"
-                }, {
                     "name": "new_entry",
                     "description": "JSON-Objekt des neuen Eintrags",
                     "required": true,
@@ -154,11 +151,14 @@
                     "required": true,
                     "type": "integer",
                     "format": "int64"
-                }, {
-                    "name": "entry_to_delete",
-                    "description": "JSON-Objekt des zu löschenden Eintrags",
+                },
+                {
+                    "name": "entry_id",
+                    "in": "path",
+                    "description": "ID des gewünschten Eintrags",
                     "required": true,
-                    "format": "json"
+                    "type": "integer",
+                    "format": "int64"
                 }],
                 "responses": {
                     "200": {
