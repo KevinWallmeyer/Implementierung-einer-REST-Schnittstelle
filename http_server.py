@@ -34,10 +34,10 @@ todo_lists = [
     {'id': todo_list_3_id, 'name': 'Privat'},
 ]
 todos = [
-    {'id': todo_1_id, 'name': 'Milch', 'description': '', 'list': todo_list_1_id, 'user': user_id_bob},
-    {'id': todo_2_id, 'name': 'Arbeitsblätter ausdrucken', 'description': '', 'list': todo_list_2_id, 'user': user_id_alice},
-    {'id': todo_3_id, 'name': 'Kinokarten kaufen', 'description': '', 'list': todo_list_3_id, 'user': user_id_eve},
-    {'id': todo_3_id, 'name': 'Eier', 'description': '', 'list': todo_list_1_id, 'user': user_id_eve},
+    {'id': todo_1_id, 'name': 'Milch', 'description': '', 'list': todo_list_1_id, 'user': user_id_bob, "done": False},
+    {'id': todo_2_id, 'name': 'Arbeitsblätter ausdrucken', 'description': '', 'list': todo_list_2_id, 'user': user_id_alice, "done": False},
+    {'id': todo_3_id, 'name': 'Kinokarten kaufen', 'description': '', 'list': todo_list_3_id, 'user': user_id_eve, "done": False},
+    {'id': todo_3_id, 'name': 'Eier', 'description': '', 'list': todo_list_1_id, 'user': user_id_eve, "done": False},
 ]
 
 # add some headers to allow cross origin access to the API on this server, necessary for using preview in Swagger Editor!
@@ -49,7 +49,7 @@ def apply_cors_header(response):
     return response
 
 # define endpoint for getting and deleting existing todo lists
-@app.route('/list/<list_id>', methods=['GET', 'DELETE'])
+@app.route('/list/<list_id>', methods=['GET', 'DELETE', 'POST'])
 def handle_list(list_id):
     # find todo list depending on given list id
     list_item = None
@@ -67,16 +67,33 @@ def handle_list(list_id):
         print('Returning todo list...')
         return jsonify([i for i in todos if i['list'] == list_id])
 
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         # delete list with given id
         print('Deleting todo list...')
         todo_lists.remove(list_item)
         return '', 200
+    
+    if request.method == 'POST':
+        #rename the list
+        # bare minimum for JSON:
+        #       {
+        #       "name": ""
+        #       }
+
+        # make JSON from POST data (even if content type is not set correctly)
+        new_name_for_list = request.get_json(force=True)
+        print('Got new name for list: {}'.format(new_name_for_list))
+        list_item['name'] = new_name_for_list['name']
+        return jsonify(list_item), 200
 
 
 # define endpoint for adding a new list
 @app.route('/list/', methods=['POST'])
 def add_new_list():
+    #Bare minimum for JSON:
+    #       {
+    #       "name": ""
+    #       }
     # make JSON from POST data (even if content type is not set correctly)
     new_list = request.get_json(force=True)
     print('Got new list to be added: {}'.format(new_list))
@@ -99,12 +116,32 @@ def add_new_entry(list_id):
     if not list_item:
         abort(404)
     else:
+        #Bare minimum for JSON:
+        #   {
+        #       "description": "",
+        #       "name": "",
+        #       "user": "~valid_id~" <-- the id has to be in the user list
+        #   }
         # make JSON from POST data (even if content type is not set correctly)
         new_entry = request.get_json(force=True)
+        
+        # find user of the new entry depending on given id
+        user_of_new_entry = None
+        for u in user_list:
+            if str(u['id']) == str(new_entry['user']):
+                user_of_new_entry = u
+                break
+                    
+        if not user_of_new_entry:
+            abort(404)
+
         print('Got new entry to be added: {}'.format(new_entry))
+
         # create id for new list, save it and return the list with id
         new_entry['id'] = uuid.uuid4()
         new_entry['list'] = list_id
+        new_entry['done'] = False
+        
         todos.append(new_entry)
         return jsonify(new_entry), 200
 
@@ -131,11 +168,40 @@ def update_entry(list_id, entry_id):
 
     #updates the entry     
     if request.method == 'POST':
+        #Bare minimum for the JSON:
+        #       {
+        #       "description": "", <-- If you want to remove the description, you have to enter a space here("description": " ")
+        #       "done": "", <-- either has to be "true" or "false" without quotation marks if you want to change it      
+        #       "name": "",
+        #       "user": "" <-- if you want to change the user, make sure that the user's id is valid
+        #       }
         # make JSON from POST data (even if content type is not set correctly)
         updated_entry = request.get_json(force=True)
         for x in todos:
             if str(x['id']) == str(wanted_entry['id']) and str(x['list']) == str(wanted_list['id']):
-                x['name'] = updated_entry['name'] #only the name can be updated
+
+                if updated_entry['description'] != "":
+                    x['description'] = updated_entry['description']               
+
+                if updated_entry['name'] != "":
+                    x['name'] = updated_entry['name']
+
+                if str(updated_entry['user']) != "":
+                    # find user depending on given id
+                    user_to_update = None
+                    for u in user_list:
+                        if str(u['id']) == str(updated_entry['user']):
+                            user_to_update = u
+                            break
+                    
+                    if not user_to_update:
+                        abort(404)
+                    else:
+                        x['user'] = updated_entry['user']
+
+                if updated_entry['done'] != "":
+                    x['done'] = updated_entry['done']
+
                 return jsonify(updated_entry), 200
     
     #deletes the entry
@@ -155,6 +221,11 @@ def handle_users():
 
     #add a new user
     if request.method == 'POST':
+        #Bare minimum for the JSON:
+        #       {    
+        #       "name": ""
+        #       }
+        # make JSON from POST data (even if content type is not set correctly)
         new_user = request.get_json(force=True)
         print('Got new user to be added: {}'.format(new_user))
         # create id for new user, save it and return the user with id
